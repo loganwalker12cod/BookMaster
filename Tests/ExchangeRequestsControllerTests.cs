@@ -64,7 +64,7 @@ public class ExchangeRequestsControllerTests
         Assert.Equal(BookStatus.Exchanged, refreshedOfferedBook.Status);
 
         Assert.Single(db.History);
-        Assert.Empty(db.ExchangeListings);
+        Assert.Single(db.ExchangeListings);
     }
 
     [Fact]

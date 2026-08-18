@@ -36,6 +36,9 @@ public class ExchangeRequestsController : ControllerBase
         var listing = await _db.ExchangeListings.Include(l => l.Book).FirstOrDefaultAsync(l => l.Id == dto.ListingId);
         if (listing == null || listing.Book == null) return BadRequest("Listing does not exist.");
 
+        if (listing.Book.Status != BookStatus.Listed)
+            return BadRequest("Listing is no longer active.");
+
         var offeredBook = await _db.Books.FindAsync(dto.OfferedBookId);
         if (offeredBook == null) return BadRequest("Offered book does not exist.");
 
@@ -89,7 +92,9 @@ public class ExchangeRequestsController : ControllerBase
 
             request.Status = ExchangeRequestStatus.Accepted;
 
-            _db.ExchangeListings.Remove(request.Listing!);
+            // Listing is intentionally kept (not deleted) so History/ExchangeRequest rows
+            // referencing it via cascade FKs are preserved. Further requests against it
+            // are blocked because both books' Status is now EXCHANGED.
 
             // reject any other pending requests on the same listing
             var otherRequests = await _db.ExchangeRequests
